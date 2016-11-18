@@ -8,7 +8,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostFormInput(title: String, body: String)
+case class PostFormInput(id: Option[Int], title: String, body: String)
 
 /**
   * Takes HTTP requests and produces JSON.
@@ -23,6 +23,7 @@ class PostController @Inject()(
 
     Form(
       mapping(
+        "id"  -> optional(number),
         "title" -> nonEmptyText,
         "body" -> text
       )(PostFormInput.apply)(PostFormInput.unapply)
@@ -43,7 +44,13 @@ class PostController @Inject()(
     }
   }
 
-  def show(id: String): Action[AnyContent] = {
+  def update(id: Int): Action[AnyContent] = {
+    action.async { implicit request =>
+      updateJsonPost(id)
+    }
+  }
+
+  def show(id: Int): Action[AnyContent] = {
     action.async { implicit request =>
       handler.lookup(id).map { post =>
         Ok(Json.toJson(post))
@@ -65,4 +72,20 @@ class PostController @Inject()(
 
     form.bindFromRequest().fold(failure, success)
   }
+
+private def updateJsonPost[A](id:Int)(
+      implicit request: PostRequest[A]): Future[Result] = {
+    def failure(badForm: Form[PostFormInput]) = {
+      Future.successful(BadRequest(badForm.errorsAsJson))
+    }
+
+    def success(input: PostFormInput) = {
+      handler.update(id, input).map { post =>
+        Created(Json.toJson(post)).withHeaders(LOCATION -> post.link)
+      }
+    }
+
+    form.bindFromRequest().fold(failure, success)
+  }
+  
 }

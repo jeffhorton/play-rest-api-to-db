@@ -33,18 +33,19 @@ object PostResource {
   */
 class PostResourceHandler @Inject()(
     routerProvider: Provider[PostRouter],
-    postRepository: PostRepository)(implicit ec: ExecutionContext) {
+    postRepository: PostRepositoryDB)(implicit ec: ExecutionContext) {
 
   def create(postInput: PostFormInput): Future[PostResource] = {
-    val data = PostData(PostId("999"), postInput.title, postInput.body)
-    // We don't actually create the post, so return what we have
+    val data = PostData(999, postInput.title, postInput.body)
+    
     postRepository.create(data).map { id =>
       createPostResource(data)
+      PostResource(id.toString, routerProvider.get.link(id), data.title, data.body)
     }
   }
 
-  def lookup(id: String): Future[Option[PostResource]] = {
-    val postFuture = postRepository.get(PostId(id))
+  def lookup(id: Int): Future[Option[PostResource]] = {
+    val postFuture = postRepository.get(id)
     postFuture.map { maybePostData =>
       maybePostData.map { postData =>
         createPostResource(postData)
@@ -60,6 +61,15 @@ class PostResourceHandler @Inject()(
 
   private def createPostResource(p: PostData): PostResource = {
     PostResource(p.id.toString, routerProvider.get.link(p.id), p.title, p.body)
+  }
+
+def update(id: Int, postInput: PostFormInput): Future[PostResource] = {
+    val data = PostData( id, postInput.title, postInput.body)
+    
+    postRepository.update(data).map { id =>
+      createPostResource(data)
+      PostResource(data.id.toString, routerProvider.get.link(data.id), data.title, data.body)
+    }
   }
 
 }

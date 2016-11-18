@@ -12,7 +12,7 @@ import play.api.routing.sird._
 class PostRouter @Inject()(controller: PostController) extends SimpleRouter {
   val prefix = "/v1/posts"
 
-  def link(id: PostId): String = {
+  def link(id: Int): String = {
     import com.netaporter.uri.dsl._
     val url = prefix / id.toString
     url.toString()
@@ -25,8 +25,11 @@ class PostRouter @Inject()(controller: PostController) extends SimpleRouter {
     case POST(p"/") =>
       controller.process
 
-    case GET(p"/$id") =>
+    case GET(p"/${int(id)}") =>
       controller.show(id)
+
+    case POST(p"/${int(id)}") =>
+      controller.update(id)
   }
 
 }
