@@ -316,6 +316,9 @@ Now update to get those installed
 ```
 Ok. So I tried this a few times in a few ways and never could figure out exactly what was wrong. In the version in my github
 they are just plain lines. Dont' forget the MySQL driver either.
+
+* An astute reader pointed out that the dependendies are likely missing the required commas between them. Thanks.
+
 ```
 /build.sbt
 libraryDependencies += "com.typesafe.play" %% "play-slick" % "2.0.0"
